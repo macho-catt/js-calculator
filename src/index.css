@@ -1,0 +1,159 @@
+
+
+body{
+  background-color: #557f90;
+}
+
+#container{
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+#calculator{
+  justify-content: center;
+  position: relative;
+  margin-top: 100px;
+  display: grid;
+  background-color: black;
+  width: 290px;
+  height: 430px;
+  grid-template-columns: 70px 70px 70px 70px;
+  grid-template-rows: 70px 70px 70px 70px 70px 70px;
+  grid-template-areas:
+    "screen screen screen screen"
+    "clear clear divide multiply"
+    "seven eight nine subtract"
+    "four five six add"
+    "one two three equals"
+    "zero zero decimal equals";
+}
+
+#screen{
+  grid-area: screen;
+  background-color: black;
+  display: grid;
+  grid-template-rows: 35px 35px;
+  grid-template-areas:
+    "top-screen"
+    "bottom-screen";
+}
+
+#top-screen{
+  grid-area: top-screen;
+  position: relative;
+  justify-self: end;
+  align-self: end;
+  color: orange;
+  font-size: 20px;
+}
+
+#bottom-screen{
+  grid-area: bottom-screen;
+  justify-self: end;
+  align-self: center;
+  color: white;
+  font-size: 25px;
+}
+
+#decimal{
+  grid-area: decimal;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#zero{
+  grid-area: zero;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#one{
+  grid-area: one;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#two{
+  grid-area: two;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#three{
+  grid-area: three;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#four{
+  grid-area: four;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#five{
+  grid-area: five;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#six{
+  grid-area: six;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#seven{
+  grid-area: seven;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#eight{
+  grid-area: eight;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#nine{
+  grid-area: nine;
+  background-color: #4d4d4d;
+  color: white;
+}
+
+#equals{
+  grid-area: equals;
+  background-color: #4169e1;
+  color: white;
+}
+
+#add{
+  grid-area: add;
+  background-color: #218321;
+  color: white;
+}
+
+#subtract{
+  grid-area: subtract;
+  background-color: #218321;
+  color: white;
+}
+
+#divide{
+  grid-area: divide;
+  background-color: #218321;
+  color: white;
+}
+
+#multiply{
+  grid-area: multiply;
+  background-color: #218321;
+  color: white;
+}
+
+#clear{
+  grid-area: clear;
+  background-color: #c30a00;
+  color: white;
+}
