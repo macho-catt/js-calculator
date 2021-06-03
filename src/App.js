@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Button from './Button.js'
 import Screen from './Screen.js'
 //import axios from 'axios'
@@ -8,6 +8,7 @@ import Screen from './Screen.js'
 const App = () => {
   const [ currentClick, setCurrentClick ] = useState('0');
   const [ expression, setExpression ] = useState('');
+  // an operator state would probably make this much easier
   const symbols = {
     one: '1',
     two: '2',
@@ -28,54 +29,51 @@ const App = () => {
     clear: 'AC',
   };
 
-  // Set currentClick state based on the provided boolean
-  const currentClickSetter = (id, option) => {
-    option
-    ? setCurrentClick(symbols[id])
-    : setCurrentClick(currentClick.concat(symbols[id]));
-  }
-
-  // Set expression state based on the provided boolean
-  const expressionSetter = (id, option) => {
-    option
-    ? setExpression(symbols[id])
-    : setExpression(expression.concat(symbols[id]));
-  }
-
-  // Evaluate an input equation and return the result
+  // Parse and evaluate an equation and return the result
   const evaluateExpression = (equation) => {
-    let operation = '';
+    let operator = '';
     let result = 0;
 
-    // Set operation based on the matching regex 
-    if (equation.match(/[+]/)){
-      operation = '+';
-    }
-    else if (equation.match(/[X]/)){
-      operation = 'X';
-    }
-    else if (equation.match(/[/]/)){
-      operation = '/';
-    }
-    // Place subtraction last so multiplication and division takes effect and negative numbers retain the minus sign
-    else if (equation.match(/[-]/)){
-      operation = '-';
+    // If the equation is just an integer with no valid operation, just return it
+    if (equation.match(/[-+/X]/) === null){
+      return equation;
     }
 
-    let equationArray = equation.split(operation);
+    // Set operator based on the matching regex 
+    if (equation.match(/[+]/)){
+      operator = '+';
+    }
+    else if (equation.match(/[X]/)){
+      operator = 'X';
+    }
+    else if (equation.match(/[/]/)){
+      operator = '/';
+    }
+    // Place subtraction last so the previous operators take effect and negative numbers retain the minus sign
+    else if (equation.match(/[-]/)){
+      // Treat consecutive minus operators as plus
+      if (equation.match(/--/)){
+        equation = equation.replace('--', '+');
+        operator = '+';
+      }
+      else{
+        operator = '-';
+      }
+    }
+
+    let equationArray = equation.split(operator);
     // If the first index is empty because of a split from minus sign (i.e. negative number), treat it as zero
+    // This also deals with a negative integer input with no operators
     if (equationArray[0] === ""){
       equationArray[0] = '0';
     }
-    console.log(`array is: ${equationArray}`)
 
-    switch(operation){
+    switch(operator){
       case "+":
         result = equationArray.reduce((total, sum) => parseFloat(total) + parseFloat(sum));
         break;
       case "-":
         result = equationArray.reduce((total, difference) => parseFloat(total) - parseFloat(difference));
-        console.log(result)
         break;
       case "X":
         result = equationArray.reduce((total, product) => parseFloat(total) * parseFloat(product));
@@ -89,6 +87,54 @@ const App = () => {
     return `${result}`;
   }
 
+  const handleOperator = (operator) => {
+    setCurrentClick(symbols[operator]);
+    // Add, multiply, and divide will operatorally act the same
+    if (operator === 'add' || operator === 'multiply' || operator === 'divide'){
+      // If the operator is the first button clicked after a clean state
+      if (expression === ''){
+        setExpression(expression.concat('0').concat(symbols[operator]));
+      }
+      // For a case where the last two characters in the expression state are operators, change the two operators to the last clicked operator --> this can happen for a negative number
+      else if(expression.length > 2 && expression[expression.length - 2].match(/[-+X/]/) !== null && expression[expression.length - 1].match(/[-+X/]/) !== null){
+        setExpression(expression.slice(0, expression.length - 2).concat(symbols[operator]))
+      }
+      // For a case where the last character in the expression state is an operator, change the operator to the new one
+      else if(expression[expression.length - 1].match(/[-+X/]/) !== null){
+        setExpression(expression.slice(0, expression.length - 1).concat(symbols[operator]))
+      }
+      // For any other cases where the expression state has an operator character, evaluate the expression
+      else if (expression.match(/[-+X/]/) !== null){
+        setExpression(evaluateExpression(expression).concat(symbols[operator]));
+      }
+      else{
+        setExpression(expression.concat(symbols[operator]));
+      }
+    }
+    // Minus acts differently because of subtraction and negative numbers
+    else{
+      // If expression is empty or only has a minus sign, treat the minus as a leading negative sign
+      if (expression === '' || expression === '-'){
+        setExpression(symbols[operator]);
+      }
+      // For a case where the last two characters in the expression state are operators, treat the last operator as a leading negative sign --> this can happen for a negative number
+      else if(expression.length > 2 && expression[expression.length - 2].match(/[-+X/]/) !== null && expression[expression.length - 1].match(/[-]/) !== null){
+        setExpression(expression.slice(0, expression.length - 1).concat(symbols[operator]))
+      }
+      // For a case where the last character in the expression state is an operator, treat the minus as a leading negative sign
+      else if(expression[expression.length - 1].match(/[-+X/]/) !== null ){
+        setExpression(expression.concat(symbols[operator]))
+      }
+      // For any other cases where the expression state has an operator character, evaluate the expression
+      else if (expression.match(/[-+X/]/) !== null){
+        setExpression(evaluateExpression(expression).concat(symbols[operator]));
+      }
+      else{
+        setExpression(expression.concat(symbols[operator]));
+      }
+    }
+  }
+
   // Use event delegation for the group of buttons
   const handleOnClick = (event) => {
     switch (event.target.id){
@@ -96,6 +142,10 @@ const App = () => {
       case "screen":
         break;
       case "calculator":
+        break;
+      case "bottom-screen":
+        break;
+      case "top-screen":
         break;
       case "clear":
         // Clear all states
@@ -108,105 +158,66 @@ const App = () => {
         setExpression(evaluateExpression(expression));
         break;
       case "add":
-        // Allow only one + in the currentClick state
         if (currentClick !== '+'){
-          currentClickSetter(event.target.id, true);
-          // If expression is currently empty, treat it as zero
-          expression === ''
-          ? setExpression(expression.concat('0').concat(symbols["add"]))
-          // If expression currently has a valid arithmetic equation, evaluate it first
-          : expression.match(/[+]/) !== null
-          || expression.match(/[-]/) !== null
-          || expression.match(/[X]/) !== null
-          || expression.match(/[/]/) !== null
-          ? setExpression(evaluateExpression(expression).concat('+'))
-          // Else, just concatenate the sign
-          : expressionSetter(event.target.id, false);
+          handleOperator('add');
         }
         break;
       case "subtract":
-        // Allow only one minus in the currentClick state
-        if (currentClick !== '-'){
-          currentClickSetter(event.target.id, true);  
-          // If expression is currently empty, treat it as zero
-          expression === ''
-          ? setExpression(expression.concat('0').concat(symbols["subtract"]))
-          // If expression currently has a subtraction expression, evaluate it first
-          : expression.match(/[-]/) !== null
-          ? setExpression(evaluateExpression(expression).concat('-'))
-          : expression.match(/[+]/) !== null
-          || expression.match(/[X]/) !== null
-          || expression.match(/[/]/) !== null
-          ? console.log('do something else')
-          // Else, just concatenate the sign
-          : expressionSetter(event.target.id, false);
-        }
+          handleOperator('subtract');
         break;
       case "multiply":
-        // Allow only one multiplication in the currentClick state
         if (currentClick !== 'X'){
-          currentClickSetter(event.target.id, true);
-          // If expression is currently empty, treat it as zero
-          expression === ''
-          ? setExpression(expression.concat('0').concat(symbols["multiply"]))
-          // If expression currently has a valid arithmetic equation, evaluate it first
-          : expression.match(/[+]/) !== null
-          || expression.match(/[-]/) !== null
-          || expression.match(/[X]/) !== null
-          || expression.match(/[/]/) !== null
-          ? setExpression(evaluateExpression(expression).concat('X'))
-          // Else, just concatenate the sign
-          : expressionSetter(event.target.id, false);
+          handleOperator('multiply');
         }
         break;
       case "divide":
-        // Allow only one division in the currentClick state
         if (currentClick !== '/'){
-          currentClickSetter(event.target.id, true);
-          // If expression is currently empty, treat it as zero
-          expression === ''
-          ? setExpression(expression.concat('0').concat(symbols["divide"]))
-          // If expression currently has a valid arithmetic equation, evaluate it first
-          : expression.match(/[+]/) !== null
-          || expression.match(/[-]/) !== null
-          || expression.match(/[X]/) !== null
-          || expression.match(/[/]/) !== null
-          ? setExpression(evaluateExpression(expression).concat('/'))
-          // Else, just concatenate the sign
-          : expressionSetter(event.target.id, false);
+          handleOperator('divide');
         }
         break;
       case "decimal":
         // Each number can only have one decimal
         if (currentClick.match(/[.]/) === null){
-          // If the currentClick state is an operation, treat the decimal as 0.xxxx
+          // If the currentClick state is an operator, treat the decimal as 0.xxxx
           currentClick === '+'
           || currentClick === '-'
           || currentClick === 'X'
           || currentClick === '/'
           ? setCurrentClick('0'.concat(symbols[event.target.id]))
           // Otherwise, just concatenate the decimal
-          : currentClickSetter(event.target.id, false);
+          : setCurrentClick(currentClick.concat(symbols[event.target.id]));
+
           // If the expression is empty, treat the decimal as 0.xxx
           expression === ''
           ? setExpression(expression.concat('0').concat(symbols["decimal"]))
           // Otherwise, just concatenate the decimal
-          : expressionSetter(event.target.id, false);
+          : setExpression(expression.concat(symbols[event.target.id]));
         }
         break;
       default:
-        // Keep the number on zero until a different number is selected
+        // Keep the number on zero until a different number or operator is selected (except minus)
         currentClick === '0' 
         || currentClick === '+'
-        || currentClick === '-'
         || currentClick === 'X'
         || currentClick === '/'
         || currentClick === '='
-        ? currentClickSetter(event.target.id, true)
-        : currentClickSetter(event.target.id, false);
+        ? setCurrentClick(symbols[event.target.id])
+        // Let bottom screen be a negative number if it's following an operator
+        : currentClick === '-' && expression.length > 2 && expression[expression.length - 2].match(/[-+X/]/)
+        ? setCurrentClick(currentClick.concat(symbols[event.target.id]))
+        // Let bottom screen be a negative number if it's the expression is just a leading negative sign
+        : currentClick ==='-' && expression === '-'
+        ? setCurrentClick(currentClick.concat(symbols[event.target.id]))
+        // For other cases of clicking the minus operator, just show the minus operator
+        : currentClick === '-'
+        ? setCurrentClick(symbols[event.target.id])
+        // For numbers, just append
+        : setCurrentClick(currentClick.concat(symbols[event.target.id]));
+
+        // If expression is zero, overwrite it. Otherwise, append to it
         expression === '0'
-        ? expressionSetter(event.target.id, true)
-        : expressionSetter(event.target.id, false);
+        ? setExpression(symbols[event.target.id])
+        : setExpression(expression.concat(symbols[event.target.id]));
         break;
     }
   }
@@ -218,24 +229,7 @@ const App = () => {
           <Screen id="top-screen" name={expression}/>
           <Screen id="bottom-screen" name={currentClick}/>
         </div>
-        {/* can declare this using map */}
-        <Button id="one" name="1" />
-        <Button id="two" name="2" />
-        <Button id="three" name="3" />
-        <Button id="four" name="4" />
-        <Button id="five" name="5" />
-        <Button id="six" name="6" />
-        <Button id="seven" name="7" />
-        <Button id="eight" name="8" />
-        <Button id="nine" name="9" />
-        <Button id="zero" name="0" />
-        <Button id="decimal" name="." />
-        <Button id="equals" name="=" />
-        <Button id="add" name="+" />
-        <Button id="subtract" name="-" />
-        <Button id="multiply" name="X" />
-        <Button id="divide" name="/" />
-        <Button id="clear" name="AC" />
+        {Object.keys(symbols).map(symbol => <Button id={symbol} name={symbols[symbol]} key={symbol} />)}
       </div>
     </div>
   )
