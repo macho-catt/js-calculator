@@ -13,7 +13,7 @@ body{
 #calculator{
   justify-content: center;
   position: relative;
-  margin-top: 100px;
+  margin-top: 50px;
   display: grid;
   background-color: black;
   width: 290px;

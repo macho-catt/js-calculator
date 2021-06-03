@@ -8,7 +8,7 @@ import Screen from './Screen.js'
 const App = () => {
   const [ currentClick, setCurrentClick ] = useState('0');
   const [ expression, setExpression ] = useState('');
-  // an operator state would probably make this much easier
+  const [ isEqualsClicked, setIsEqualsClicked ] = useState(false);
   const symbols = {
     one: '1',
     two: '2',
@@ -89,6 +89,7 @@ const App = () => {
 
   const handleOperator = (operator) => {
     setCurrentClick(symbols[operator]);
+    setIsEqualsClicked(false);
     // Add, multiply, and divide will operatorally act the same
     if (operator === 'add' || operator === 'multiply' || operator === 'divide'){
       // If the operator is the first button clicked after a clean state
@@ -156,6 +157,7 @@ const App = () => {
         // Evaluate expression and update both states
         setCurrentClick(evaluateExpression(expression));
         setExpression(evaluateExpression(expression));
+        setIsEqualsClicked(true);
         break;
       case "add":
         if (currentClick !== '+'){
@@ -195,29 +197,38 @@ const App = () => {
         }
         break;
       default:
-        // Keep the number on zero until a different number or operator is selected (except minus)
-        currentClick === '0' 
-        || currentClick === '+'
-        || currentClick === 'X'
-        || currentClick === '/'
-        || currentClick === '='
-        ? setCurrentClick(symbols[event.target.id])
-        // Let bottom screen be a negative number if it's following an operator
-        : currentClick === '-' && expression.length > 2 && expression[expression.length - 2].match(/[-+X/]/)
-        ? setCurrentClick(currentClick.concat(symbols[event.target.id]))
-        // Let bottom screen be a negative number if it's the expression is just a leading negative sign
-        : currentClick ==='-' && expression === '-'
-        ? setCurrentClick(currentClick.concat(symbols[event.target.id]))
-        // For other cases of clicking the minus operator, just show the minus operator
-        : currentClick === '-'
-        ? setCurrentClick(symbols[event.target.id])
-        // For numbers, just append
-        : setCurrentClick(currentClick.concat(symbols[event.target.id]));
+        // If the last button clicked was equals, treat the next number clicked as a new expression
+        if (isEqualsClicked === true){
+          setCurrentClick(symbols[event.target.id]);
+          setExpression(symbols[event.target.id]);
+          setIsEqualsClicked(false);
+        }
+        else{
+          // Keep the number on zero until a different number or operator is selected (except minus)
+          currentClick === '0' 
+          || currentClick === '+'
+          || currentClick === 'X'
+          || currentClick === '/'
+          || currentClick === '='
+          ? setCurrentClick(symbols[event.target.id])
+          // Let bottom screen be a negative number if it's following an operator
+          : currentClick === '-' && expression.length > 2 && expression[expression.length - 2].match(/[-+X/]/)
+          ? setCurrentClick(currentClick.concat(symbols[event.target.id]))
+          // Let bottom screen be a negative number if it's the expression is just a leading negative sign
+          : currentClick ==='-' && expression === '-'
+          ? setCurrentClick(currentClick.concat(symbols[event.target.id]))
+          // For other cases of clicking the minus operator, just show the minus operator
+          : currentClick === '-'
+          ? setCurrentClick(symbols[event.target.id])
+          // For numbers, just append
+          : setCurrentClick(currentClick.concat(symbols[event.target.id]));
 
-        // If expression is zero, overwrite it. Otherwise, append to it
-        expression === '0'
-        ? setExpression(symbols[event.target.id])
-        : setExpression(expression.concat(symbols[event.target.id]));
+          // If expression is zero, overwrite it. Otherwise, append to it
+          expression === '0'
+          ? setExpression(symbols[event.target.id])
+          : setExpression(expression.concat(symbols[event.target.id]));
+        }
+        
         break;
     }
   }
