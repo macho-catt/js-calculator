@@ -1,9 +1,6 @@
 import React, { useState } from 'react'
 import Button from './Button.js'
 import Screen from './Screen.js'
-//import axios from 'axios'
-//import { faTwitter } from '@fortawesome/free-brands-svg-icons'
-//import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const App = () => {
   const [ currentClick, setCurrentClick ] = useState('0');
